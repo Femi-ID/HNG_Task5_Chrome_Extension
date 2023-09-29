@@ -1,7 +1,7 @@
 
 __pycache__/
 *__pycache__
-*/__pycache__/
+*/__pycache__/*
 /__pycache__/
 chrome_extension_api/__pycache__/
 
@@ -22,7 +22,4 @@ media/thumbnails/
 venv/
 
 # django migrations
-**/migrations/**
-!**/migrations
-!**/migrations/__init__.py
 node_modules
