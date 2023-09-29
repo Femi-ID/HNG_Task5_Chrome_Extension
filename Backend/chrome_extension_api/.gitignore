@@ -1,0 +1,28 @@
+
+__pycache__/
+*__pycache__
+*/__pycache__/
+/__pycache__/
+chrome_extension_api/__pycache__/
+
+# Distribution / packaging
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+/media
+media/videos/
+media/thumbnails/
+
+venv/
+
+# django migrations
+**/migrations/**
+!**/migrations
+!**/migrations/__init__.py
+node_modules
