@@ -12,6 +12,16 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 import os.path
 from pathlib import Path
 
+import dj_database_url
+import os
+
+# import cloudinary_storage
+
+# Cloudinary Imports
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -40,6 +50,10 @@ INSTALLED_APPS = [
     'screen_recorder',
     'rest_framework',
     'rest_framework_swagger',
+
+    # CLOUDINARY APPS
+    # 'cloudinary',
+    # 'cloudinary_storage',
 ]
 
 MIDDLEWARE = [
@@ -83,6 +97,8 @@ DATABASES = {
     }
 }
 
+DATABASES["default"] = dj_database_url.parse("postgres://test_database_1x62_user:i9mE2rZtdADCDQw9SXcJd2eQRIgICRcV@dpg-ckc7h4msmu8c73arhfc0-a.oregon-postgres.render.com/test_database_1x62")
+# postgres://test_database_1x62_user:i9mE2rZtdADCDQw9SXcJd2eQRIgICRcV@dpg-ckc7h4msmu8c73arhfc0-a.oregon-postgres.render.com/test_database_1x62
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
@@ -127,3 +143,17 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_URL = 'media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+
+# Cloudinary - Django Integration
+# cloudinary.config(
+#     cloud_name = "drevbco43",
+#     api_key = "654756641729855",
+#     api_secret = "Eudy8XuY3Y1yz2VNlrNxUW8Dft4",
+# )
+
+# CLOUDINARY_STORAGE = {
+#     'CLOUD_NAME': "drevbco43",
+#     'API_KEY': "654756641729855",
+#     'API_SECRET': "Eudy8XuY3Y1yz2VNlrNxUW8Dft4",
+# }
+# DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'

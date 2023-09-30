@@ -4,11 +4,10 @@ from .serializers import ScreenRecorderSerializer
 from rest_framework.views import APIView
 from rest_framework import status, viewsets
 from rest_framework.response import Response
-from rest_framework.parsers import MultiPartParser, FormParser
-
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 
 class RecordedVideo(APIView):
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get(self, request):
         """Retrieve a list of all recorded videos."""
