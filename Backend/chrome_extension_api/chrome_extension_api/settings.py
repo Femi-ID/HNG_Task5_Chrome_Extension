@@ -35,7 +35,7 @@ SECRET_KEY = 'django-insecure-#4wca%gkl=asiugf%fqqzy24vviy!@)l)aob&!cpelib$vcjov
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -143,6 +143,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_URL = 'media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+
+CORS_ORIGIN_ALLOW_ALL = True
 
 # Cloudinary - Django Integration
 # cloudinary.config(
