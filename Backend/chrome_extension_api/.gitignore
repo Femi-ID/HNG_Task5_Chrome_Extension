@@ -1,5 +1,5 @@
-.env/
-*.sqlite3/
+.env
+*.sqlite3
 __pycache__
 *__pycache__
 */__pycache__/
@@ -8,7 +8,9 @@ chrome_extension_api/__pycache__/
 
 # Distribution / packaging
 .Python/
-env/
+venv
+virtualvenv
+virtualenv
 build/
 develop-eggs/
 dist/
