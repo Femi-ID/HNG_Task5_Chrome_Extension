@@ -31,12 +31,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-#4wca%gkl=asiugf%fqqzy24vviy!@)l)aob&!cpelib$vcjov'
+# SECRET_KEY = os.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
 
 ALLOWED_HOSTS = ['*']
-
+# ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS").split(" ")
 
 # Application definition
 
@@ -64,6 +65,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'chrome_extension_api.urls'
@@ -97,9 +101,9 @@ DATABASES = {
     }
 }
 database_url = os.environ.get("DATABASE_URL")
-# DATABASES["default"] = dj_database_url.parse(database_url)
+DATABASES["default"] = dj_database_url.parse(database_url)
 
-DATABASES["default"] = dj_database_url.parse("postgres://test_database_1x62_user:i9mE2rZtdADCDQw9SXcJd2eQRIgICRcV@dpg-ckc7h4msmu8c73arhfc0-a.oregon-postgres.render.com/test_database_1x62")
+# DATABASES["default"] = dj_database_url.parse("postgres://test_database_1x62_user:i9mE2rZtdADCDQw9SXcJd2eQRIgICRcV@dpg-ckc7h4msmu8c73arhfc0-a.oregon-postgres.render.com/test_database_1x62")
 # postgres://test_database_1x62_user:i9mE2rZtdADCDQw9SXcJd2eQRIgICRcV@dpg-ckc7h4msmu8c73arhfc0-a.oregon-postgres.render.com/test_database_1x62
 
 # Password validation
@@ -146,7 +150,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MEDIA_URL = 'media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
-CORS_ORIGIN_ALLOW_ALL = True
+CORS_ORIGIN_ALLOW_ALL_ORIGIN = True
+
+FILE_UPLOAD_HANDLERS = (
+    "django.core.files.uploadhandler.MemoryFileUploadHandler",
+    "django.core.files.uploadhandler.TemporaryFileUploadHandler"
+)
 
 # Cloudinary - Django Integration
 # cloudinary.config(
