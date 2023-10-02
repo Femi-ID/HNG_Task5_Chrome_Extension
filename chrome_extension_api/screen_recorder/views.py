@@ -9,6 +9,7 @@ import uuid
 import os
 import tempfile
 from django.core.files.uploadedfile import InMemoryUploadedFile
+import base64
 
 
 class RecordedVideo(APIView):
@@ -31,12 +32,13 @@ class RecordedVideo(APIView):
 
             # TODO: Tell the FE to send the video in chunks periodically
             video_chunk = request.data.get('video_chunk')
+            video_chunk = base64.b64decode(video_chunk)
 
             # Create a temporary file to store the video chunks
             temp_video = tempfile.NamedTemporaryFile(delete=False)
 
             # Append the chunk to the temporary file
-            temp_video.write(video_chunk.read())
+            temp_video.write(video_chunk)
 
             # To check if it is the last chunk
             if 'last_chunk' in request.data and request.data['last_chunk']:
@@ -53,7 +55,7 @@ class RecordedVideo(APIView):
                     size=os.path.getsize(temp_video.name),
                     charset=None
                 ))
-                video.video_id = str(uuid.uuid4())
+                # video.video_id = str(uuid.uuid4())
                 video.save()
 
                 os.remove(temp_video.name)

@@ -15,16 +15,16 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from rest_framework_swagger.views import get_swagger_view
+# from rest_framework_swagger.views import get_swagger_view
 from django.conf import settings
 from django.conf.urls.static import static
 
-schema_view = get_swagger_view(title='Screen Recorder API')
+# schema_view = get_swagger_view(title='Screen Recorder API')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('screen_recorder.urls')),
-    path(r'swagger-docs/', schema_view),
+    # path(r'swagger-docs/', schema_view),
 ]
 
 if settings.DEBUG:
