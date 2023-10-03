@@ -17,8 +17,6 @@ downloads/
 eggs/
 .eggs/
 lib/
-media/videos/
-media/thumbnails/
 
 venv/
 comments.txt

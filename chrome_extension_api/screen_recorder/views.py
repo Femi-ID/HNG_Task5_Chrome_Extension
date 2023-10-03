@@ -1,7 +1,8 @@
 from django.shortcuts import render
-from .models import ScreenRecorder
+from .models import ScreenRecorder, VideoChunks
 from .serializers import ScreenRecorderSerializer
 from rest_framework.views import APIView
+from rest_framework.decorators import api_view
 from rest_framework import status, viewsets
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
@@ -26,45 +27,37 @@ class RecordedVideo(APIView):
         """Create/save a recorded video."""
         # serializer = ScreenRecorderSerializer(data=request.data)
         try:
-            # video_file = serializer.validated_data.get("video_file")
-            # video_title = serializer.validated_data.get("video_title")
-            # if not video_file:
-            #     return Response({"error": "Video file must be provided"}, status=status.HTTP_400_BAD_REQUEST)
+            session_id = request.data.get('session_id')
+            if not session_id:
+                return Response({'message': 'Session ID is required'}, status=status.HTTP_400_BAD_REQUEST)
 
+            # Retrieve all video chunks for the given session ID
+            chunks = VideoChunks.objects.filter(session_id=session_id).order_by('chunk_number')
 
-            # Create a temporary file to store the video chunks
-            # temp_video = tempfile.NamedTemporaryFile(delete=False)
-            # temp_video.write(video_chunk)
+            # Comfirm all chunks are present
+            all_chunks = chunks[0].total_chunks
+            if len(chunks) != all_chunks:
+                return Response({'message': 'Not all chunks have been uploaded'}, status=status.HTTP_400_BAD_REQUEST)
 
-            # TODO: Tell the FE to send the video in chunks periodically
-            video_chunk = request.data.get('video_chunk')
-            video_chunk = base64.b64decode(video_chunk)
+            # add all video chunks into a complete video
+            combined_video = b''
+            for chunk in chunks:
+                with open(chunk.video_chunk.path, 'rb') as file:
+                    combined_video += file.read()
 
-            temp_video = BytesIO(video_chunk)
+            # Delete individual chunk files
+            for chunk in chunks:
+                os.remove(chunk.video_chunk.path)
+                chunk.delete()
 
-            # To check if it is the last chunk
-            if 'last_chunk' in request.data and request.data['last_chunk']:
-                # Close the temporary file
-                # temp_video.close()
+            # Save the complete video to the database
+            video = ScreenRecorder(session_id=session_id, video_file=combined_video)
+            video.save()
 
-                # Create a video object and save to thr database
-                video = ScreenRecorder.objects.create()
-                video_path = os.path.join(settings.MEDIA_ROOT, video.id + '.mp4')
+            serializer = ScreenRecorderSerializer(video)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-                with open(video_path, 'ab') as video_file_path:
-                    # Append the chunk to the temporary file
-                    video_file_path.write(temp_video.read())
-
-                video.video_file = video_file_path
-                video.save()
-
-                # Clear the temporary file
-                os.remove(temp_video.name)
-
-                serializer = ScreenRecorderSerializer(video)
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-            return Response({'message': 'Chunk received successfully.'}, status=status.HTTP_200_OK)
+            # return Response({'message': 'Chunk received successfully.'}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": f"Unable to process video file: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -73,11 +66,22 @@ class RecordedVideo(APIView):
         # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@api_view(['GET'])
+def get_video(request, session_id):
+    try:
+        # To get complete video via session_id
+        video = ScreenRecorder.objects.get(id=id)
+        response = Response(video.video_file, content_type='video/mp4', )
+
+        # Also:(Not compulsory) specify the file name
+        response['Content-Disposition'] = f'attachment; filename="{session_id}.mp4"'
+
+        return response
+
+    except ScreenRecorder.DoesNotExist:
+        return Response({'message': 'The video requested is not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    except Exception as e:
+        return Response({"error": f"Unable to process video file: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-# Create and save new video record
-#                 video = ScreenRecorder.objects.create()
-#                 video_id = str(uuid.uuid4())
-#
-#                 video.video_file.save(video_title, video_file, save=False)
-#                 video.save()

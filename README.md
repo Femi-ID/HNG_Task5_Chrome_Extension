@@ -5,7 +5,7 @@
 ### The project is a screen recorder that receives videos, save it to a file and display all videos in the file.
 
 ## Endpoints:
-#### The api has just 1 endpoint: 
+#### The api has just 2 endpoint: 
 
 ##### /api/videos- This endpoint accepts both **GET** AND **POST** requests only.
 
@@ -16,6 +16,6 @@
 ##### After collecting all video chunks. It then stores them in a file in the directory.
 `https://femiid.pythonanywhere.com/api/videos`
 
-
+##### /api/video/<video_id>- The GET erequest retieves the video with the unique id.
 
 
