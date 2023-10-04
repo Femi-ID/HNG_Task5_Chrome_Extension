@@ -18,11 +18,12 @@ from io import BytesIO
 
 
 def video_iterator(video_path, chunk_size=8192):
-    while True:
-        data = video_path.read(chunk_size)
-        if not data:
-            break
-        yield data
+    with open(video_path, 'rb') as video:
+        while True:
+            data = video.read(chunk_size)
+            if not data:
+                break
+            yield data
 
 
 class RecordedVideo(APIView):
@@ -40,21 +41,23 @@ class RecordedVideo(APIView):
         try:
             if serializer.is_valid():
                 video = serializer.validated_data['video_file']
+                video_id = str(uuid.uuid4())
 
                 # To set the streaming video's content type
                 content_type, encoding = mimetypes.guess_type(video.name)
                 response = StreamingHttpResponse(video_iterator(video), content_type=content_type)
-                response['Content-Disposition'] = f'attachment; filename="{os.path.basename(video.name)}.mp4"'
+                response['Content-Disposition'] = f'inline; filename="{video_id}.mp4"'
 
                 # To save the video file to disk
                 video_name = os.path.basename(video.name)
                 video_path = os.path.join(settings.MEDIA_ROOT, 'videos', video_name)
 
-                with open(video_path, 'rb') as file:
+                with open(video_path, 'wb') as file:
                     for chunk in video.chunks():
                         file.write(chunk)
-
-                return Response({'response': response}, serializer.data, status=status.HTTP_201_CREATED)
+                return response
+            return Response({"error": f"Unable to serialize video file"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                # return Response(serializer.data, status=status.HTTP_201_CREATED)
                 # return Response({'message': 'Chunk received successfully.'}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": f"Unable to process video file: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
