@@ -8,10 +8,21 @@ from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 import uuid
 import os
+from django.conf import settings
+from django.http import StreamingHttpResponse
 import tempfile
+import mimetypes
 from django.core.files.uploadedfile import InMemoryUploadedFile
 import base64
 from io import BytesIO
+
+
+def video_iterator(video_path, chunk_size=8192):
+    while True:
+        data = video_path.read(chunk_size)
+        if not data:
+            break
+        yield data
 
 
 class RecordedVideo(APIView):
@@ -25,39 +36,26 @@ class RecordedVideo(APIView):
 
     def post(self, request, format=None):
         """Create/save a recorded video."""
-        # serializer = ScreenRecorderSerializer(data=request.data)
+        serializer = ScreenRecorderSerializer(data=request.data)
         try:
-            session_id = request.data.get('session_id')
-            if not session_id:
-                return Response({'message': 'Session ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+            if serializer.is_valid():
+                video = serializer.validated_data['video_file']
 
-            # Retrieve all video chunks for the given session ID
-            chunks = VideoChunks.objects.filter(session_id=session_id).order_by('chunk_number')
+                # To set the streaming video's content type
+                content_type, encoding = mimetypes.guess_type(video.name)
+                response = StreamingHttpResponse(video_iterator(video), content_type=content_type)
+                response['Content-Disposition'] = f'attachment; filename="{os.path.basename(video.name)}.mp4"'
 
-            # Comfirm all chunks are present
-            all_chunks = chunks[0].total_chunks
-            if len(chunks) != all_chunks:
-                return Response({'message': 'Not all chunks have been uploaded'}, status=status.HTTP_400_BAD_REQUEST)
+                # To save the video file to disk
+                video_name = os.path.basename(video.name)
+                video_path = os.path.join(settings.MEDIA_ROOT, 'videos', video_name)
 
-            # add all video chunks into a complete video
-            combined_video = b''
-            for chunk in chunks:
-                with open(chunk.video_chunk.path, 'rb') as file:
-                    combined_video += file.read()
+                with open(video_path, 'rb') as file:
+                    for chunk in video.chunks():
+                        file.write(chunk)
 
-            # Delete individual chunk files
-            for chunk in chunks:
-                os.remove(chunk.video_chunk.path)
-                chunk.delete()
-
-            # Save the complete video to the database
-            video = ScreenRecorder(session_id=session_id, video_file=combined_video)
-            video.save()
-
-            serializer = ScreenRecorderSerializer(video)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-            # return Response({'message': 'Chunk received successfully.'}, status=status.HTTP_200_OK)
+                return Response({'response': response}, serializer.data, status=status.HTTP_201_CREATED)
+                # return Response({'message': 'Chunk received successfully.'}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": f"Unable to process video file: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
